@@ -38,7 +38,7 @@ while True:
     # Menampilkan gambar dengan wajah yang terdeteksi
     cv2.imshow("Face Recognition Window", frame)
     # Mengambil foto sampai mencapai 100 pengambilan
-    if (a > 100):
+    if (a > 199):
         break  # Keluar dari loop jika sudah mencapai 100 foto
 
 # Melepas kamera dan menutup semua jendela OpenCV

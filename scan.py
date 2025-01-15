@@ -1,74 +1,49 @@
-# Mengimport package yg diperlukan
 import cv2, time
 import os
 from PIL import Image
 
-# camera = 0 berarti menggunakan web cam bawaan perangkat. Ubah 0 jika menggunakan webcam external
-camera = 0
-
-# Inisialisasi video capture
-# cv2 -> modul open-cv
-#videoCapture() -> object dari opencv dengan parameter (source, CAP_DSHOW = DirectShow sebagai video input)
+camera = 0  # Webcam default (change if using external)
 video = cv2.VideoCapture(camera, cv2.CAP_DSHOW)
-
-# cascade classifier menggunakan file haarcascade yang ada
-# CascadeClassifier(source) -> objet dari opencv yang membaca classifier yang akan digunakan 
 faceDeteksi = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
-
-# face.LBPHFaceRecognizer_create() -> membuat pengenalan dengan menggunakan algoritma LBPH(Local Binary Pattern)
 recognizer = cv2.face.LBPHFaceRecognizer_create()
-
-# recognizer membaca file training.xml
 recognizer.read('Dataset/training.xml')
 
-# deklarasi variabel a
 a = 0
-# Program webcam akan terus berjalan selama bernilai TRUE
+id_map = {
+    1: 'Weldon', 2: 'Elbert', 3: 'Zoe', 4: 'Kenneth', 5: 'Rayhan',
+    6: 'Alfredo', 7: 'Bryan', 8: 'Janssen', 9: 'Gilbert', 10: 'Lovina',
+    11: 'Jean', 12: 'Hugo', 13: 'Bagas', 14: 'Flo', 15: 'Jerremy',
+    16: 'Reuben', 17: 'Caroline'
+}
+
+# Function to get face name and confidence
+def get_face_name_and_confidence(id, conf):
+    if conf < 50:  # If confidence is lower than 50, consider it 'Unknown'
+        return "Unknown", conf
+    name = id_map.get(id, "Unknown")  # Get the name from the id_map or return 'Unknown' if id not found
+    return name, conf
+
 while True:
-    # Iterasi variabel a (a+1)
-    a = a + 1
-    # Membuat cam di frame windows
+    a += 1
     check, frame = video.read()
-    # cvtColor(frame, mode warna) -> object dalam cv2 untuk menentukan mode warna dalam frame
-    # COLOR_BGR2GRAY -> mengubah mode warna (Blue Green Red) menjadi Gray
     abu = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    wajah = faceDeteksi.detectMultiScale(abu, 1.3, 5)
 
-    # detecMultiScale() -> object untuk Mendeteksi wajah, dengan paramter (mode gambar, faktor scala, spesifik berapa Neightboors kandidat)
-    wajah = faceDeteksi.detectMultiScale(abu,1.3,5)
-    for(x,y,w,h) in wajah :
-        # Membuat kotak hijau di wajah
-        cv2.rectangle(frame, (x,y),(x+w,y+h),(0,255,0),2)
-        id, conf = recognizer.predict(abu[y:y+h, x:x+w])
+    for (x, y, w, h) in wajah:
+        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        id, conf = recognizer.predict(abu[y:y + h, x:x + w])
 
-        # Seleksi Id
-        if (id == 1):
-            id = 'Weldon'
-        elif (id == 2):
-            id = 'Elbert'
-        elif (id == 3):
-            id = 'Zoe'
-        elif (id == 4):
-            id = 'Pak'
-        elif (id == 5):
-            id= 'Hugo'
-        elif (id == 7):
-            id ='Gunawan'
-        elif (id == 6):
-            id = 'Keyzia'
-        else:
-            id = 'Unknown'
+        # Get name and confidence
+        name, confidence = get_face_name_and_confidence(id, conf)
+        
+        # Display name and confidence next to the face
+        cv2.putText(frame, f"{name} - {confidence:.2f}", (x + 40, y - 10), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 255, 0))
 
-        # Menambahkan teks sesuai Id ke wajah didalam frame
-        cv2.putText(frame, str(id),(x+40, y-10), cv2.FONT_HERSHEY_DUPLEX,1,(0,255,0))
-    # imshow untuk memberikan label pada frame saat window terbuka
-    cv2.imshow("Face Recognation", frame)
-    # menentukan keyboard event
+    cv2.imshow("Face Recognition", frame)
+
     key = cv2.waitKey(1)
-
-    # Cam berhenti saat menekan tombol q pada keyboard
-    if key == ord('q'):
+    if key == ord('q'):  # Press 'q' to quit
         break
 
-# Camera berhenti
 video.release()
 cv2.destroyAllWindows()
